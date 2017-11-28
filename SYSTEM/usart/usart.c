@@ -31,7 +31,9 @@
 //1,增加了对UCOSII的支持
 ////////////////////////////////////////////////////////////////////////////////// 	  
  
-
+#ifdef __cplusplus
+extern "C" {
+#endif //__cplusplus
 //////////////////////////////////////////////////////////////////
 //加入以下代码,支持printf函数,而不需要选择use MicroLIB	  
 #if 1
@@ -208,6 +210,8 @@ void USART1_IRQHandler(void)                	//串口1中断服务程序
 #endif	
 
  
-
+#ifdef __cplusplus
+}
+#endif //__cplusplus
 
 

@@ -13,6 +13,8 @@
 #include "ff.h"
 //#include "exfuns.h"
 //#include "bmp.h"
+#include "stdio.h"
+#include <string.h>
 
 //extern OV7725_MODE_PARAM cam_mode;
 unsigned int black_num[9];
@@ -36,95 +38,114 @@ FRESULT open_append (
     }
     return fr;
 }
+static void SD_CARD_INIT(void)
+{
+SDIO_Interrupts_Config();	/* é…ç½®SDIOä¸­æ–­ï¼Œ æ­¤å‡½æ•°åœ¨bsp_sdio_sd.c */
+//SDå¡æ£€æµ‹
+while(SD_Init())//æ£€æµ‹ä¸åˆ°SDå¡
+{
+	printf("\r\nNO SD Card\r\n");
+	delay_ms(500);
 
-
-/*
-//int main (void)
-//{
-//    FRESULT fr;
-//    FATFS fs;
-//    FIL fil;
-
-//    /* Open or create a log file and ready to append */
-//    f_mount(&fs, "", 0);
-//    fr = open_append(&fil, "logfile.txt");
-//    if (fr != FR_OK) return 1;
-
-//    /* Append a line */
-//    f_printf(&fil, "%02u/%02u/%u, %2u:%02u\n", Mday, Mon, Year, Hour, Min);
-
-//    /* Close the file */
-//    f_close(&fil);
-
-//    return 0;
-//}
+}
+show_sdcard_info(); //æ‰“å°SDå¡ç›¸å…³ä¿¡æ¯
+printf("\r\n SD Card OK\r\n");//æ£€æµ‹SDå¡æˆåŠŸ
+}
 
 int main(void)
 { 
-	//±äÁ¿ÉêÃ÷
-	u8 lcd_id[12];				//´æ·ÅLCD ID×Ö·û´®
-	u8 ov7725_retry=0;
-	
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);//ÉèÖÃÏµÍ³ÖĞ¶ÏÓÅÏÈ¼¶·Ö×é2
 	delay_init(168);      //³õÊ¼»¯ÑÓÊ±º¯Êı
 	uart_init(115200);		//³õÊ¼»¯´®¿Ú²¨ÌØÂÊÎª115200
-
-//	KEY_EXTI_Init();
-//	LED_Init();					  //³õÊ¼»¯LED
-//	usmart_dev.init(84);		//³õÊ¼»¯USMART
-//	W25QXX_Init();				//³õÊ¼»¯W25Q128
-	
 	TIM3_Int_Init(0xFFFF,8400-1);	//¶¨Ê±Æ÷Ê±ÖÓ84M£¬·ÖÆµÏµÊı8400£¬ËùÒÔ84M/8400=10KhzµÄ¼ÆÊıÆµÂÊ
-	
-	//ÄÚ´æ¹ÜÀí Èí¼şÔËĞĞÊ±¶Ô¼ÆËã»úÄÚ´æ×ÊÔ´µÄ·ÖÅäºÍÊ¹ÓÃµÄ¼¼Êõ¡£
-	//Ö÷ÒªÄ¿µÄÊÇ ¸ßĞ§¡¢¿ìËÙµÄ·ÖÅä£¬²¢ÔÚÊÊµ±µÄÊ±ºòÊÍ·ÅºÍ»ØÊÕÄÚ´æ×ÊÔ´
-//	my_mem_init(SRAMIN);		//³õÊ¼»¯ÄÚ²¿ÄÚ´æ³Ø 
-//	my_mem_init(SRAMCCM);		//³õÊ¼»¯CCMÄÚ´æ³Ø
-	
-	//LCD³õÊ¼»¯ 
-// 	LCD_Init();           //³õÊ¼»¯LCD FSMC½Ó¿Ú
-//  sprintf((char*)lcd_id,"LCD ID:%04X",lcddev.id);//½«LCD ID´òÓ¡µ½lcd_idÊı×é
-//	LCD_Clear(WHITE);
-//	POINT_COLOR=RED;      //»­±ÊÑÕÉ«£ººìÉ«
-//	
-	//SD¿¨¼ì²â
-	while(SD_Init())//¼ì²â²»µ½SD¿¨
-	{
-		printf("\r\nNO SD Card\r\n");
-		delay_ms(500);
-//		LED0=!LED0;//DS0ÉÁË¸
-	}
-	show_sdcard_info();	//´òÓ¡SD¿¨Ïà¹ØĞÅÏ¢
-	printf("\r\n SD Card OK\r\n");//¼ì²âSD¿¨³É¹¦
-	
-//	exfuns_init();				//ÎªfatfsÏà¹Ø±äÁ¿ÉêÇëÄÚ´æ  
-//  f_mount(fs[0],"0:",1); 		//¹ÒÔØSD¿¨ 
+	printf("STM32F4Discovery Board initialization finished!\r\n");
 
-    FRESULT fr;
-    FATFS fs;
-    FIL fil;
+	//sd åˆå§‹åŒ–
+FRESULT result;
+FATFS fs;
+DIR DirInf;
+FILINFO FileInf;
+FIL fil;
+char* file_name="/hl5201314.txt";
+char* file_path="/YX1288";
+char textFileBuffer[100];
+char file_name_path[100];
+char textFileBuffer2[200];
+u32 bw;
+SD_CARD_INIT();
+				/* æŒ‚è½½æ–‡ä»¶ç³»ç»Ÿ */
+			   result = f_mount(0, &fs);		   /* Mount a logical drive */
+			   if (result != FR_OK)
+			   {
+				   printf("æŒ‚è½½æ–‡ä»¶ç³»ç»Ÿå¤±è´¥ (%d)\r\n", result);
+			   }
+			   /* åˆ›å»ºç›®å½•/  */
+			   result = f_mkdir(file_path);
+			   result=f_mount(0, &fs);
+			   /* æ‰“å¼€æ ¹æ–‡ä»¶å¤¹ */
+			   result = f_opendir(&DirInf, file_path); /* å¦‚æœä¸å¸¦å‚æ•°ï¼Œåˆ™ä»å½“å‰ç›®å½•å¼€å§‹ */
+			   if (result != FR_OK)
+			   {
+				   printf("æ‰“å¼€æ ¹ç›®å½•å¤±è´¥ (%d)\r\n", result);
+			   }
+						   /* æ‰“å¼€æ–‡ä»¶ */
+						   /*FA_OPEN_ALWAYS   | æ‰“å¼€æ–‡ä»¶ï¼Œå¦‚æœæ–‡ä»¶ä¸å­˜åœ¨ï¼Œåˆ™åˆ›å»ºä¸€ä¸ªæ–°æ–‡ä»¶ï¼›| ç”¨æ­¤ç§æ–¹å¼ï¼Œå¯ä»¥ç”¨ f_lseek åœ¨æ–‡ä»¶åè¿½åŠ æ•°æ®
+							   FA_CREATE_NEW   | æ–°å»ºæ–‡ä»¶ï¼Œå¦‚æœæ–‡ä»¶å·²å­˜åœ¨ï¼Œåˆ™æ–°å»ºå¤±è´¥*/
+			   //	   file_name_path=file_path+file_name;
+			   //	 strcpy(file_name_path,file_path);
+			   //	 strcat(file_name_path,file_name);
+						   sprintf( file_name_path,    "%s%s",file_path,file_name);
+						   printf("æ‰“å¼€ç›®å½• (%s)\r\n", file_name_path);
+						   result = f_open(&fil, file_name_path, FA_OPEN_ALWAYS | FA_WRITE);
+			   
+						   if(result!=FR_OK)
+						   {
+							   while(1);
+						   }
+						   result = f_lseek (&fil, fil.fsize);	////æŒ‡é’ˆæŒ‡å‘æ–‡ä»¶æœ«å°¾
+						   /* å†™ä¸€ä¸²æ•°æ® */
+						   sprintf( textFileBuffer,    "\r\lele128-FatFS Write Demo ");
+			   
+						   result = f_write(&fil, textFileBuffer, strlen(textFileBuffer)-1, &bw);
+						   sprintf( textFileBuffer,    "\r\n2222222222222222222222222222-FatFS Write Demo ");
+						   result = f_lseek (&fil, fil.fsize);	////æŒ‡é’ˆæŒ‡å‘æ–‡ä»¶æœ«å°¾
+						   result = f_write(&fil, textFileBuffer, strlen(textFileBuffer)-1, &bw);
+						   sprintf( textFileBuffer,    "\r\n144444444444444444444-FatFS Write Demo ");
+						   result = f_lseek (&fil, fil.fsize);	////æŒ‡é’ˆæŒ‡å‘æ–‡ä»¶æœ«å°¾
+						   result = f_write(&fil, textFileBuffer, strlen(textFileBuffer)-1, &bw);
+						   /* å…³é—­æ–‡ä»¶*/
+						   f_close(&fil);
+						   /* æ‰“å¼€æ–‡ä»¶ */
+						   result = f_open(&fil, file_name_path, FA_OPEN_EXISTING | FA_READ);
+						   /* è¯»å–æ–‡ä»¶ */
+						   result = f_read(&fil, textFileBuffer2, fil.fsize,&bw);
+						   if (bw > 0)
+						   {
+							   textFileBuffer2[bw] = 0;
+							   printf("\r\narmfly.txt æ–‡ä»¶å†…å®¹ : \r\n%s\r\n", textFileBuffer2);
+						   }
+						   else
+						   {
+							   printf("\r\narmfly.txt æ–‡ä»¶å†…å®¹ : \r\n");
+						   }
+//						   delete [] textFileBuffer2;
+						   f_close(&fil);
+						   /* å¸è½½æ–‡ä»¶ç³»ç»Ÿ */
+						   f_mount(0, NULL);
 
-	FRESULT result;
-  
-// 	result = f_mount(0, &fs);			/* Mount a logical drive */
-//	if (result != FR_OK)   
-//	{
-//		printf("¹ÒÔØÎÄ¼şÏµÍ³Ê§°Ü (%d)\r\n", result);
-//	}
+
+
   while(1)
 	{
-	    /* Open or create a log file and ready to append */
- //   f_mount(&fs, "", 0);
- 	/* ¹ÒÔØÎÄ¼şÏµÍ³ */
 
 	result = f_mount(0, &fs);			/* Mount a logical drive */
 	if (result != FR_OK)
 	{
 		printf("¹ÒÔØÎÄ¼şÏµÍ³Ê§°Ü (%d)\r\n", result);
 	}
-    fr = open_append(&fil, "hanlele````2`33333333333333logfile.txt");
+    result = open_append(&fil, "128hanlele````2`33333333333333logfile.txt");
    
-    if (fr == FR_OK)  printf("\r\n SD Card creat OK\r\n");//¼ì²âSD¿¨³É¹¦;
+    if (result == FR_OK)  printf("\r\n SD Card creat OK\r\n");//¼ì²âSD¿¨³É¹¦;
         
         	uint32_t cnt = 0;
         FILINFO FileInf;
@@ -132,77 +153,45 @@ int main(void)
         uint8_t tmpStr[20];
 /* ¶ÁÈ¡µ±Ç°ÎÄ¼ş¼ĞÏÂµÄÎÄ¼şºÍÄ¿Â¼ */
 	printf("Name\t\tTyepe\t\tSize\r\n");
-	for (cnt = 0; ;cnt++) 
-	{
-		result = f_readdir(&DirInf,&FileInf); 		/* ¶ÁÈ¡Ä¿Â¼Ïî£¬Ë÷Òı»á×Ô¶¯ÏÂÒÆ */
-		if (result != FR_OK || FileInf.fname[0] == 0)
+		for (cnt = 0; ;cnt++) 
 		{
-			break;
+			result = f_readdir(&DirInf,&FileInf); 		/* ¶ÁÈ¡Ä¿Â¼Ïî£¬Ë÷Òı»á×Ô¶¯ÏÂÒÆ */
+			if (result != FR_OK || FileInf.fname[0] == 0)
+			{
+				break;
+			}
+			
+			if (FileInf.fname[0] == '.')
+			{
+				continue;
+			}
+			
+			printf("%s", FileInf.fname);
+			if (strlen(FileInf.fname) < 8)	/* ¶ÔÆë */
+			{
+				printf("\t\t");
+			}
+			else
+			{
+				printf("\t");
+			}
+			if (FileInf.fattrib == AM_DIR)
+			{
+				printf("Ä¿Â¼\t\t");
+			} 
+			else 
+			{
+				printf("ÎÄ¼ş\t\t");
+			}
+			printf("%d\r\n", FileInf.fsize);
+			sprintf((char *)tmpStr, "%d", FileInf.fsize);
 		}
-		
-		if (FileInf.fname[0] == '.')
-		{
-			continue;
-		}
-		
-		printf("%s", FileInf.fname);
-		if (strlen(FileInf.fname) < 8)	/* ¶ÔÆë */
-		{
-			printf("\t\t");
-		}
-		else
-		{
-			printf("\t");
-		}
-		if (FileInf.fattrib == AM_DIR)
-		{
-			printf("Ä¿Â¼\t\t");
-		} 
-		else 
-		{
-			printf("ÎÄ¼ş\t\t");
-		}
-		printf("%d\r\n", FileInf.fsize);
-		sprintf((char *)tmpStr, "%d", FileInf.fsize);
-	}
     /* Append a line */
 
 
     /* Close the file */
     f_close(&fil);	
   }
-	
-	//OV7725³õÊ¼»¯
-//	OV7725_GPIO_Config();
-//	while(OV7725_Init() != SUCCESS)	//¼ì²âOV7725ÊÇ·ñÇı¶¯³É¹¦
-//	{
-//		ov7725_retry++;
-//		if(ov7725_retry>5)
-//		{
-//			printf("\r\nNO OV7725\r\n");	
-//			while(1);
-//		}
-//	}
-		/*¸ù¾İÉãÏñÍ·²ÎÊı×éÅäÖÃÄ£Ê½*/
-//	OV7725_Special_Effect(cam_mode.effect);
-//	/*¹âÕÕÄ£Ê½*/
-//	OV7725_Light_Mode(cam_mode.light_mode);
-//	/*±¥ºÍ¶È*/
-//	OV7725_Color_Saturation(cam_mode.saturation);
-//	/*¹âÕÕ¶È*/
-//	OV7725_Brightness(cam_mode.brightness);
-//	/*¶Ô±È¶È*/
-//	OV7725_Contrast(cam_mode.contrast);
-//	/*ÌØÊâĞ§¹û*/
-//	OV7725_Special_Effect(cam_mode.effect);
-//	
-//	/*ÉèÖÃÍ¼Ïñ²ÉÑù¼°Ä£Ê½´óĞ¡*/
-//	OV7725_Window_Set(cam_mode.cam_sx,
-//														cam_mode.cam_sy,
-//														cam_mode.cam_width,
-//														cam_mode.cam_height,
-//														cam_mode.QVGA_VGA);
-	
 	while(1)
 	{
 	}
