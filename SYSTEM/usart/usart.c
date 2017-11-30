@@ -1,39 +1,21 @@
-#include "sys.h"
 #include "usart.h"	
-////////////////////////////////////////////////////////////////////////////////// 	 
-//如果使用ucos,则包括下面的头文件即可.
-#if SYSTEM_SUPPORT_OS
-#include "includes.h"					//ucos 使用	  
-#endif
-//////////////////////////////////////////////////////////////////////////////////	 
-//本程序只供学习使用，未经作者许可，不得用于其它任何用途
-//ALIENTEK STM32F4探索者开发板
-//串口1初始化		   
-//正点原子@ALIENTEK
-//技术论坛:www.openedv.com
-//修改日期:2014/6/10
-//版本：V1.5
-//版权所有，盗版必究。
-//Copyright(C) 广州市星翼电子科技有限公司 2009-2019
-//All rights reserved
-//********************************************************************************
-//V1.3修改说明 
-//支持适应不同频率下的串口波特率设置.
-//加入了对printf的支持
-//增加了串口接收命令功能.
-//修正了printf第一个字符丢失的bug
-//V1.4修改说明
-//1,修改串口初始化IO的bug
-//2,修改了USART_RX_STA,使得串口最大接收字节数为2的14次方
-//3,增加了USART_REC_LEN,用于定义串口最大允许接收的字节数(不大于2的14次方)
-//4,修改了EN_USART1_RX的使能方式
-//V1.5修改说明
-//1,增加了对UCOSII的支持
-////////////////////////////////////////////////////////////////////////////////// 	  
- 
-#ifdef __cplusplus
-extern "C" {
-#endif //__cplusplus
+
+#include "fifo.h"
+
+fifo_t uart_rx_fifo, uart_tx_fifo;
+uint8_t uart_tx_buf[UART_TX_BUFFER_SIZE], uart_rx_buf[UART_RX_BUFFER_SIZE];
+
+///* Private function prototypes -----------------------------------------------*/
+//#ifdef __GNUC__
+//  /* With GCC/RAISONANCE, small printf (option LD Linker->Libraries->Small printf
+//     set to 'Yes') calls __io_putchar() */
+//  #define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
+//#else
+//  #define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
+//#endif /* __GNUC__ */
+
+
+
 //////////////////////////////////////////////////////////////////
 //加入以下代码,支持printf函数,而不需要选择use MicroLIB	  
 #if 1
@@ -58,7 +40,17 @@ int fputc(int ch, FILE *f)
 	return ch;
 }
 #endif
- 
+
+
+
+  
+/* Private functions ---------------------------------------------------------*/
+
+  
+  
+#define  EN_USART1_RX 1
+  
+  
 #if EN_USART1_RX   //如果使能了接收
 //串口1中断服务程序
 //注意,读取USARTx->SR能避免莫名其妙的错误   	
@@ -170,6 +162,71 @@ void uart_init(u32 bound){
 #endif
 	
 }
+
+#endif	
+  
+  
+  
+//PUTCHAR_PROTOTYPE 
+//{
+//  /* 将Printf内容发往串口 */
+//  USART_SendData(USART2, (uint8_t)ch);
+//  while (USART_GetFlagStatus(USART2, USART_FLAG_TXE) == RESET);
+// 
+//  return (ch);
+//}
+
+//========================================================================================================
+//串口封装成数据缓存区
+//========================================================================================================
+/** @brief 串口初始化
+  *        1) 定义两个数据缓冲区，一个用于发射，一个用于接收
+  *        2) 初始化串口波特率，全双工，使能接收中断(发射中断，在有数据发射后使能)
+  */
+void serial_open(uint8_t port, uint32_t baud) 
+    {
+	fifo_init(&uart_tx_fifo, uart_tx_buf, UART_TX_BUFFER_SIZE);	
+	fifo_init(&uart_rx_fifo, uart_rx_buf, UART_RX_BUFFER_SIZE);
+	
+  uart_init(115200);
+}
+
+
+/** @brief 写数据到串口，启动发射
+  *        
+  * @note 数据写入发射缓冲区后，启动发射中断，在中断程序，数据自动发出
+  */
+u8 serial_write_buf(uint8_t* buf, uint16_t length) {
+	uint16_t i;
+	
+	if(length == 0) return false;
+  for(i = 0; length > 0; length--, i++)	{
+		fifo_write_ch(&uart_tx_fifo, buf[i]);
+	}	
+  USART_ITConfig(USART1, USART_IT_TXE, ENABLE);
+	
+	return true;
+}
+
+/** @brief 自串口读数据 
+  * @return 一字节数据
+  */
+u8 serial_read_ch(void){
+	uint8_t ch;	
+	fifo_read_ch(&uart_rx_fifo, &ch);	
+	return ch;
+}
+
+/** @breif 检测发射缓冲区剩余字节长度 
+  * @return 剩余字节长度
+  */
+u16 serial_free(void){
+	return fifo_free(&uart_tx_fifo);
+}
+
+u16 serial_available(void){
+	return fifo_used(&uart_rx_fifo);
+}
 void USART1_IRQHandler(void)                	//串口1中断服务程序
 {
 	u8 Res;
@@ -199,19 +256,5 @@ void USART1_IRQHandler(void)                	//串口1中断服务程序
 			}
 		}   		 
   } 
-    
-
-
-  
-#if SYSTEM_SUPPORT_OS 	//如果SYSTEM_SUPPORT_OS为真，则需要支持OS.
-	OSIntExit();  											 
-#endif
-} 
-#endif	
-
- 
-#ifdef __cplusplus
+		
 }
-#endif //__cplusplus
-
-

@@ -14,12 +14,20 @@
 //#include "exfuns.h"
 //#include "bmp.h"
 #include "stdio.h"
-#include <string.h>
+//#include <string.h>
 
-//extern OV7725_MODE_PARAM cam_mode;
+#include "OpenTel_Mavlink.h"
+
+
 unsigned int black_num[9];
 unsigned int frame_num=0;
 uint32_t sample_time=0;
+
+
+mavlink_system_t mavlink_system;
+mavlink_message_t* msg;
+
+
 
 FRESULT open_append (
     FIL* fp,            /* [OUT] File object to create */
@@ -56,7 +64,8 @@ int main(void)
 { 
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);//设置系统中断优先级分组2
 	delay_init(168);      //初始化延时函数
-	uart_init(115200);		//初始化串口波特率为115200
+//	uart_init(115200);		//初始化串口波特率为115200
+    	serial_open(0, 0);		
 	TIM3_Int_Init(0xFFFF,8400-1);	//定时器时钟84M，分频系数8400，所以84M/8400=10Khz的计数频率
 	printf("STM32F4Discovery Board initialization finished!\r\n");
 
