@@ -26,7 +26,8 @@ uint32_t sample_time=0;
 
 mavlink_system_t mavlink_system;
 mavlink_message_t* msg;
-
+uint8_t testTxBuf[10] = {1,2,3,4,5,6,7,8,9,10};
+uint16_t tranlTimer;
 
 
 FRESULT open_append (
@@ -59,151 +60,192 @@ while(SD_Init())//æ£€æµ‹ä¸åˆ°SDå¡
 show_sdcard_info(); //æ‰“å°SDå¡ç›¸å…³ä¿¡æ¯
 printf("\r\n SD Card OK\r\n");//æ£€æµ‹SDå¡æˆåŠŸ
 }
-
-int main(void)
-{ 
-	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);//ÉèÖÃÏµÍ³ÖĞ¶ÏÓÅÏÈ¼¶·Ö×é2
-	delay_init(168);      //³õÊ¼»¯ÑÓÊ±º¯Êı
-//	uart_init(115200);		//³õÊ¼»¯´®¿Ú²¨ÌØÂÊÎª115200
-    	serial_open(0, 0);		
-	TIM3_Int_Init(0xFFFF,8400-1);	//¶¨Ê±Æ÷Ê±ÖÓ84M£¬·ÖÆµÏµÊı8400£¬ËùÒÔ84M/8400=10KhzµÄ¼ÆÊıÆµÂÊ
-	printf("STM32F4Discovery Board initialization finished!\r\n");
-
-	//sd åˆå§‹åŒ–
-FRESULT result;
-FATFS fs;
-DIR DirInf;
-FILINFO FileInf;
-FIL fil;
-char* file_name="/hl5201314.txt";
-char* file_path="/YX1288";
-char textFileBuffer[100];
-char file_name_path[100];
-char textFileBuffer2[200];
-u32 bw;
-SD_CARD_INIT();
-				/* æŒ‚è½½æ–‡ä»¶ç³»ç»Ÿ */
-			   result = f_mount(0, &fs);		   /* Mount a logical drive */
-			   if (result != FR_OK)
-			   {
-				   printf("æŒ‚è½½æ–‡ä»¶ç³»ç»Ÿå¤±è´¥ (%d)\r\n", result);
-			   }
-			   /* åˆ›å»ºç›®å½•/  */
-			   result = f_mkdir(file_path);
-			   result=f_mount(0, &fs);
-			   /* æ‰“å¼€æ ¹æ–‡ä»¶å¤¹ */
-			   result = f_opendir(&DirInf, file_path); /* å¦‚æœä¸å¸¦å‚æ•°ï¼Œåˆ™ä»å½“å‰ç›®å½•å¼€å§‹ */
-			   if (result != FR_OK)
-			   {
-				   printf("æ‰“å¼€æ ¹ç›®å½•å¤±è´¥ (%d)\r\n", result);
-			   }
-						   /* æ‰“å¼€æ–‡ä»¶ */
-						   /*FA_OPEN_ALWAYS   | æ‰“å¼€æ–‡ä»¶ï¼Œå¦‚æœæ–‡ä»¶ä¸å­˜åœ¨ï¼Œåˆ™åˆ›å»ºä¸€ä¸ªæ–°æ–‡ä»¶ï¼›| ç”¨æ­¤ç§æ–¹å¼ï¼Œå¯ä»¥ç”¨ f_lseek åœ¨æ–‡ä»¶åè¿½åŠ æ•°æ®
-							   FA_CREATE_NEW   | æ–°å»ºæ–‡ä»¶ï¼Œå¦‚æœæ–‡ä»¶å·²å­˜åœ¨ï¼Œåˆ™æ–°å»ºå¤±è´¥*/
-			   //	   file_name_path=file_path+file_name;
-			   //	 strcpy(file_name_path,file_path);
-			   //	 strcat(file_name_path,file_name);
-						   sprintf( file_name_path,    "%s%s",file_path,file_name);
-						   printf("æ‰“å¼€ç›®å½• (%s)\r\n", file_name_path);
-						   result = f_open(&fil, file_name_path, FA_OPEN_ALWAYS | FA_WRITE);
-			   
-						   if(result!=FR_OK)
-						   {
-							   while(1);
-						   }
-						   result = f_lseek (&fil, fil.fsize);	////æŒ‡é’ˆæŒ‡å‘æ–‡ä»¶æœ«å°¾
-						   /* å†™ä¸€ä¸²æ•°æ® */
-						   sprintf( textFileBuffer,    "\r\lele128-FatFS Write Demo ");
-			   
-						   result = f_write(&fil, textFileBuffer, strlen(textFileBuffer)-1, &bw);
-						   sprintf( textFileBuffer,    "\r\n2222222222222222222222222222-FatFS Write Demo ");
-						   result = f_lseek (&fil, fil.fsize);	////æŒ‡é’ˆæŒ‡å‘æ–‡ä»¶æœ«å°¾
-						   result = f_write(&fil, textFileBuffer, strlen(textFileBuffer)-1, &bw);
-						   sprintf( textFileBuffer,    "\r\n144444444444444444444-FatFS Write Demo ");
-						   result = f_lseek (&fil, fil.fsize);	////æŒ‡é’ˆæŒ‡å‘æ–‡ä»¶æœ«å°¾
-						   result = f_write(&fil, textFileBuffer, strlen(textFileBuffer)-1, &bw);
-						   /* å…³é—­æ–‡ä»¶*/
-						   f_close(&fil);
-						   /* æ‰“å¼€æ–‡ä»¶ */
-						   result = f_open(&fil, file_name_path, FA_OPEN_EXISTING | FA_READ);
-						   /* è¯»å–æ–‡ä»¶ */
-						   result = f_read(&fil, textFileBuffer2, fil.fsize,&bw);
-						   if (bw > 0)
-						   {
-							   textFileBuffer2[bw] = 0;
-							   printf("\r\narmfly.txt æ–‡ä»¶å†…å®¹ : \r\n%s\r\n", textFileBuffer2);
-						   }
-						   else
-						   {
-							   printf("\r\narmfly.txt æ–‡ä»¶å†…å®¹ : \r\n");
-						   }
-//						   delete [] textFileBuffer2;
-						   f_close(&fil);
-						   /* å¸è½½æ–‡ä»¶ç³»ç»Ÿ */
-						   f_mount(0, NULL);
+void delay(void){
+	uint16_t count = 30000;
+	while(count--);
+}
 
 
 
-  while(1)
-	{
-
-	result = f_mount(0, &fs);			/* Mount a logical drive */
-	if (result != FR_OK)
-	{
-		printf("¹ÒÔØÎÄ¼şÏµÍ³Ê§°Ü (%d)\r\n", result);
-	}
-    result = open_append(&fil, "128hanlele````2`33333333333333logfile.txt");
-   
-    if (result == FR_OK)  printf("\r\n SD Card creat OK\r\n");//¼ì²âSD¿¨³É¹¦;
-        
-        	uint32_t cnt = 0;
-        FILINFO FileInf;
-        DIR DirInf; 
-        uint8_t tmpStr[20];
-/* ¶ÁÈ¡µ±Ç°ÎÄ¼ş¼ĞÏÂµÄÎÄ¼şºÍÄ¿Â¼ */
-	printf("Name\t\tTyepe\t\tSize\r\n");
-		for (cnt = 0; ;cnt++) 
-		{
-			result = f_readdir(&DirInf,&FileInf); 		/* ¶ÁÈ¡Ä¿Â¼Ïî£¬Ë÷Òı»á×Ô¶¯ÏÂÒÆ */
-			if (result != FR_OK || FileInf.fname[0] == 0)
-			{
-				break;
+/*
+ *
+ */
+int main(void){	
+  SysTick_Config(SystemCoreClock / 1000);		
+	
+	serial_open(0, 0);		
+	
+	mavlink_system.sysid = MAV_TYPE_GENERIC;
+	mavlink_system.compid = MAV_AUTOPILOT_GENERIC;
+	
+	while(1) {
+		mavlink_send_message(0, MSG_HEARTBEAT, 0);
+		mavlink_send_message(0, MSG_LOCATION, 0);
+				
+		while(1){
+			if(tranlTimer > 100) {
+				tranlTimer = 0;
+				mavlink_send_message(0, MSG_HEARTBEAT, 0);
+		    mavlink_send_message(0, MSG_ATTITUDE, 0);
+		    mavlink_send_message(0, MSG_AHRS, 0);
 			}
-			
-			if (FileInf.fname[0] == '.')
-			{
-				continue;
-			}
-			
-			printf("%s", FileInf.fname);
-			if (strlen(FileInf.fname) < 8)	/* ¶ÔÆë */
-			{
-				printf("\t\t");
-			}
-			else
-			{
-				printf("\t");
-			}
-			if (FileInf.fattrib == AM_DIR)
-			{
-				printf("Ä¿Â¼\t\t");
-			} 
-			else 
-			{
-				printf("ÎÄ¼ş\t\t");
-			}
-			printf("%d\r\n", FileInf.fsize);
-			sprintf((char *)tmpStr, "%d", FileInf.fsize);
+			update();
 		}
-    /* Append a line */
-
-
-    /* Close the file */
-    f_close(&fil);	
-  }
-	while(1)
-	{
+		
+		#ifdef TEST_UART
+		serial_write_buf(testTxBuf, 10);	
+		delay();
+		
+		for(i=0; i<10; i++) testTxBuf[i]++;
+    delay();		
+		#endif
 	}
 }
+
+//int main(void)
+//{ 
+//	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);//ÉèÖÃÏµÍ³ÖĞ¶ÏÓÅÏÈ¼¶·Ö×é2
+//	delay_init(168);      //³õÊ¼»¯ÑÓÊ±º¯Êı
+////	uart_init(115200);		//³õÊ¼»¯´®¿Ú²¨ÌØÂÊÎª115200
+//    	serial_open(0, 0);		
+//	TIM3_Int_Init(0xFFFF,8400-1);	//¶¨Ê±Æ÷Ê±ÖÓ84M£¬·ÖÆµÏµÊı8400£¬ËùÒÔ84M/8400=10KhzµÄ¼ÆÊıÆµÂÊ
+//	printf("STM32F4Discovery Board initialization finished!\r\n");
+
+//	//sd åˆå§‹åŒ–
+//FRESULT result;
+//FATFS fs;
+//DIR DirInf;
+//FILINFO FileInf;
+//FIL fil;
+//char* file_name="/hl5201314.txt";
+//char* file_path="/YX1288";
+//char textFileBuffer[100];
+//char file_name_path[100];
+//char textFileBuffer2[200];
+//u32 bw;
+//SD_CARD_INIT();
+//				/* æŒ‚è½½æ–‡ä»¶ç³»ç»Ÿ */
+//			   result = f_mount(0, &fs);		   /* Mount a logical drive */
+//			   if (result != FR_OK)
+//			   {
+//				   printf("æŒ‚è½½æ–‡ä»¶ç³»ç»Ÿå¤±è´¥ (%d)\r\n", result);
+//			   }
+//			   /* åˆ›å»ºç›®å½•/  */
+//			   result = f_mkdir(file_path);
+//			   result=f_mount(0, &fs);
+//			   /* æ‰“å¼€æ ¹æ–‡ä»¶å¤¹ */
+//			   result = f_opendir(&DirInf, file_path); /* å¦‚æœä¸å¸¦å‚æ•°ï¼Œåˆ™ä»å½“å‰ç›®å½•å¼€å§‹ */
+//			   if (result != FR_OK)
+//			   {
+//				   printf("æ‰“å¼€æ ¹ç›®å½•å¤±è´¥ (%d)\r\n", result);
+//			   }
+//						   /* æ‰“å¼€æ–‡ä»¶ */
+//						   /*FA_OPEN_ALWAYS   | æ‰“å¼€æ–‡ä»¶ï¼Œå¦‚æœæ–‡ä»¶ä¸å­˜åœ¨ï¼Œåˆ™åˆ›å»ºä¸€ä¸ªæ–°æ–‡ä»¶ï¼›| ç”¨æ­¤ç§æ–¹å¼ï¼Œå¯ä»¥ç”¨ f_lseek åœ¨æ–‡ä»¶åè¿½åŠ æ•°æ®
+//							   FA_CREATE_NEW   | æ–°å»ºæ–‡ä»¶ï¼Œå¦‚æœæ–‡ä»¶å·²å­˜åœ¨ï¼Œåˆ™æ–°å»ºå¤±è´¥*/
+//			   //	   file_name_path=file_path+file_name;
+//			   //	 strcpy(file_name_path,file_path);
+//			   //	 strcat(file_name_path,file_name);
+//						   sprintf( file_name_path,    "%s%s",file_path,file_name);
+//						   printf("æ‰“å¼€ç›®å½• (%s)\r\n", file_name_path);
+//						   result = f_open(&fil, file_name_path, FA_OPEN_ALWAYS | FA_WRITE);
+//			   
+//						   if(result!=FR_OK)
+//						   {
+//							   while(1);
+//						   }
+//						   result = f_lseek (&fil, fil.fsize);	////æŒ‡é’ˆæŒ‡å‘æ–‡ä»¶æœ«å°¾
+//						   /* å†™ä¸€ä¸²æ•°æ® */
+//						   sprintf( textFileBuffer,    "\r\lele128-FatFS Write Demo ");
+//			   
+//						   result = f_write(&fil, textFileBuffer, strlen(textFileBuffer)-1, &bw);
+//						   sprintf( textFileBuffer,    "\r\n2222222222222222222222222222-FatFS Write Demo ");
+//						   result = f_lseek (&fil, fil.fsize);	////æŒ‡é’ˆæŒ‡å‘æ–‡ä»¶æœ«å°¾
+//						   result = f_write(&fil, textFileBuffer, strlen(textFileBuffer)-1, &bw);
+//						   sprintf( textFileBuffer,    "\r\n144444444444444444444-FatFS Write Demo ");
+//						   result = f_lseek (&fil, fil.fsize);	////æŒ‡é’ˆæŒ‡å‘æ–‡ä»¶æœ«å°¾
+//						   result = f_write(&fil, textFileBuffer, strlen(textFileBuffer)-1, &bw);
+//						   /* å…³é—­æ–‡ä»¶*/
+//						   f_close(&fil);
+//						   /* æ‰“å¼€æ–‡ä»¶ */
+//						   result = f_open(&fil, file_name_path, FA_OPEN_EXISTING | FA_READ);
+//						   /* è¯»å–æ–‡ä»¶ */
+//						   result = f_read(&fil, textFileBuffer2, fil.fsize,&bw);
+//						   if (bw > 0)
+//						   {
+//							   textFileBuffer2[bw] = 0;
+//							   printf("\r\narmfly.txt æ–‡ä»¶å†…å®¹ : \r\n%s\r\n", textFileBuffer2);
+//						   }
+//						   else
+//						   {
+//							   printf("\r\narmfly.txt æ–‡ä»¶å†…å®¹ : \r\n");
+//						   }
+////						   delete [] textFileBuffer2;
+//						   f_close(&fil);
+//						   /* å¸è½½æ–‡ä»¶ç³»ç»Ÿ */
+//						   f_mount(0, NULL);
+
+
+
+//  while(1)
+//	{
+
+//	result = f_mount(0, &fs);			/* Mount a logical drive */
+//	if (result != FR_OK)
+//	{
+//		printf("¹ÒÔØÎÄ¼şÏµÍ³Ê§°Ü (%d)\r\n", result);
+//	}
+//    result = open_append(&fil, "128hanlele````2`33333333333333logfile.txt");
+//   
+//    if (result == FR_OK)  printf("\r\n SD Card creat OK\r\n");//¼ì²âSD¿¨³É¹¦;
+//        
+//        	uint32_t cnt = 0;
+//        FILINFO FileInf;
+//        DIR DirInf; 
+//        uint8_t tmpStr[20];
+///* ¶ÁÈ¡µ±Ç°ÎÄ¼ş¼ĞÏÂµÄÎÄ¼şºÍÄ¿Â¼ */
+//	printf("Name\t\tTyepe\t\tSize\r\n");
+//		for (cnt = 0; ;cnt++) 
+//		{
+//			result = f_readdir(&DirInf,&FileInf); 		/* ¶ÁÈ¡Ä¿Â¼Ïî£¬Ë÷Òı»á×Ô¶¯ÏÂÒÆ */
+//			if (result != FR_OK || FileInf.fname[0] == 0)
+//			{
+//				break;
+//			}
+//			
+//			if (FileInf.fname[0] == '.')
+//			{
+//				continue;
+//			}
+//			
+//			printf("%s", FileInf.fname);
+//			if (strlen(FileInf.fname) < 8)	/* ¶ÔÆë */
+//			{
+//				printf("\t\t");
+//			}
+//			else
+//			{
+//				printf("\t");
+//			}
+//			if (FileInf.fattrib == AM_DIR)
+//			{
+//				printf("Ä¿Â¼\t\t");
+//			} 
+//			else 
+//			{
+//				printf("ÎÄ¼ş\t\t");
+//			}
+//			printf("%d\r\n", FileInf.fsize);
+//			sprintf((char *)tmpStr, "%d", FileInf.fsize);
+//		}
+//    /* Append a line */
+
+
+//    /* Close the file */
+//    f_close(&fil);	
+//  }
+//	while(1)
+//	{
+//	}
+//}
 
 
