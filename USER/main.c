@@ -49,21 +49,24 @@ FRESULT open_append (
 }
 static void SD_CARD_INIT(void)
 {
-SDIO_Interrupts_Config();	/* 配置SDIO中断， 此函数在bsp_sdio_sd.c */
-//SD卡检测
-while(SD_Init())//检测不到SD卡
+SDIO_Interrupts_Config();	/* 配置SDIO中断�?此函数在bsp_sdio_sd.c */
+//SD卡检�?
+while(SD_Init())//检测不到SD�?
 {
 	printf("\r\nNO SD Card\r\n");
 	delay_ms(500);
 
 }
-show_sdcard_info(); //打印SD卡相关信息
-printf("\r\n SD Card OK\r\n");//检测SD卡成功
+show_sdcard_info(); //打印SD卡相关信�?
+printf("\r\n SD Card OK\r\n");//检测SD卡成�?
 }
 void delay(void){
 	uint16_t count = 30000;
 	while(count--);
 }
+#ifdef DEBUG_SEND_MSG
+char  test_cntxx[20];
+#endif
 
 
 
@@ -72,22 +75,26 @@ void delay(void){
  */
 int main(void){	
   SysTick_Config(SystemCoreClock / 1000);		
-	
-	serial_open(0, 0);		
+	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);//����ϵͳ�ж����ȼ�����2
+	delay_init(168);      //��ʼ����ʱ����
+//	uart_init(115200);		//��ʼ�����ڲ�����Ϊ115200
+    	serial_open(0, 0);		
+	TIM3_Int_Init(0xFFFF,8400-1);	//��ʱ��ʱ��84M����Ƶϵ��8400������84M/8400=10Khz�ļ���Ƶ��
+	printf("STM32F4Discovery Board initialization finished!\r\n");
 	
 	mavlink_system.sysid = MAV_TYPE_GENERIC;
 	mavlink_system.compid = MAV_AUTOPILOT_GENERIC;
 	
 	while(1) {
-		mavlink_send_message(0, MSG_HEARTBEAT, 0);
+		mavlink_send_message(1, MSG_HEARTBEAT, 0);
 		mavlink_send_message(0, MSG_LOCATION, 0);
-				
 		while(1){
 			if(tranlTimer > 100) {
 				tranlTimer = 0;
-				mavlink_send_message(0, MSG_HEARTBEAT, 0);
+			mavlink_send_message(0, MSG_HEARTBEAT, 0);
 		    mavlink_send_message(0, MSG_ATTITUDE, 0);
 		    mavlink_send_message(0, MSG_AHRS, 0);
+Auto_PRINTLOG(1);//break point>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 			}
 			update();
 		}
@@ -104,14 +111,14 @@ int main(void){
 
 //int main(void)
 //{ 
-//	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);//����ϵͳ�ж����ȼ�����2
-//	delay_init(168);      //��ʼ����ʱ����
-////	uart_init(115200);		//��ʼ�����ڲ�����Ϊ115200
+//	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2);//����ϵͳ�ж����ȼ�����2
+//	delay_init(168);      //��ʼ����ʱ����
+////	uart_init(115200);		//��ʼ�����ڲ�����Ϊ115200
 //    	serial_open(0, 0);		
-//	TIM3_Int_Init(0xFFFF,8400-1);	//��ʱ��ʱ��84M����Ƶϵ��8400������84M/8400=10Khz�ļ���Ƶ��
+//	TIM3_Int_Init(0xFFFF,8400-1);	//��ʱ��ʱ��84M����Ƶϵ��8400������84M/8400=10Khz�ļ���Ƶ��
 //	printf("STM32F4Discovery Board initialization finished!\r\n");
 
-//	//sd 初始化
+//	//sd 初始�?
 //FRESULT result;
 //FATFS fs;
 //DIR DirInf;
@@ -134,13 +141,13 @@ int main(void){
 //			   result = f_mkdir(file_path);
 //			   result=f_mount(0, &fs);
 //			   /* 打开根文件夹 */
-//			   result = f_opendir(&DirInf, file_path); /* 如果不带参数，则从当前目录开始 */
+//			   result = f_opendir(&DirInf, file_path); /* 如果不带参数，则从当前目录开�?*/
 //			   if (result != FR_OK)
 //			   {
-//				   printf("打开根目录失败 (%d)\r\n", result);
+//				   printf("打开根目录失�?(%d)\r\n", result);
 //			   }
 //						   /* 打开文件 */
-//						   /*FA_OPEN_ALWAYS   | 打开文件，如果文件不存在，则创建一个新文件；| 用此种方式，可以用 f_lseek 在文件后追加数据
+//						   /*FA_OPEN_ALWAYS   | 打开文件，如果文件不存在，则创建一个新文件；| 用此种方式，可以�?f_lseek 在文件后追加数据
 //							   FA_CREATE_NEW   | 新建文件，如果文件已存在，则新建失败*/
 //			   //	   file_name_path=file_path+file_name;
 //			   //	 strcpy(file_name_path,file_path);
@@ -154,7 +161,7 @@ int main(void){
 //							   while(1);
 //						   }
 //						   result = f_lseek (&fil, fil.fsize);	////指针指向文件末尾
-//						   /* 写一串数据 */
+//						   /* 写一串数�?*/
 //						   sprintf( textFileBuffer,    "\r\lele128-FatFS Write Demo ");
 //			   
 //						   result = f_write(&fil, textFileBuffer, strlen(textFileBuffer)-1, &bw);
@@ -192,21 +199,21 @@ int main(void){
 //	result = f_mount(0, &fs);			/* Mount a logical drive */
 //	if (result != FR_OK)
 //	{
-//		printf("�����ļ�ϵͳʧ�� (%d)\r\n", result);
+//		printf("�����ļ�ϵͳʧ�� (%d)\r\n", result);
 //	}
 //    result = open_append(&fil, "128hanlele````2`33333333333333logfile.txt");
 //   
-//    if (result == FR_OK)  printf("\r\n SD Card creat OK\r\n");//���SD���ɹ�;
+//    if (result == FR_OK)  printf("\r\n SD Card creat OK\r\n");//���SD���ɹ�;
 //        
 //        	uint32_t cnt = 0;
 //        FILINFO FileInf;
 //        DIR DirInf; 
 //        uint8_t tmpStr[20];
-///* ��ȡ��ǰ�ļ����µ��ļ���Ŀ¼ */
+///* ��ȡ��ǰ�ļ����µ��ļ���Ŀ¼ */
 //	printf("Name\t\tTyepe\t\tSize\r\n");
 //		for (cnt = 0; ;cnt++) 
 //		{
-//			result = f_readdir(&DirInf,&FileInf); 		/* ��ȡĿ¼��������Զ����� */
+//			result = f_readdir(&DirInf,&FileInf); 		/* ��ȡĿ¼��������Զ����� */
 //			if (result != FR_OK || FileInf.fname[0] == 0)
 //			{
 //				break;
@@ -218,7 +225,7 @@ int main(void){
 //			}
 //			
 //			printf("%s", FileInf.fname);
-//			if (strlen(FileInf.fname) < 8)	/* ���� */
+//			if (strlen(FileInf.fname) < 8)	/* ���� */
 //			{
 //				printf("\t\t");
 //			}
@@ -232,7 +239,7 @@ int main(void){
 //			} 
 //			else 
 //			{
-//				printf("�ļ�\t\t");
+//				printf("�ļ�\t\t");
 //			}
 //			printf("%d\r\n", FileInf.fsize);
 //			sprintf((char *)tmpStr, "%d", FileInf.fsize);
