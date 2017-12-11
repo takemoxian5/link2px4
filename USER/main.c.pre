@@ -87,17 +87,6 @@ int main(void)
 
     mavlink_system.sysid = MAV_TYPE_GENERIC;
     mavlink_system.compid =MAV_AUTOPILOT_GENERIC;
-	mavlink_servo_output_raw_t* servo_output_raw;
-	servo_output_raw->time_usec = 20000000;
-	servo_output_raw->servo1_raw = 950;
-	servo_output_raw->servo2_raw = 950;
-	servo_output_raw->servo3_raw = 950;
-	servo_output_raw->servo4_raw = 950;
-	servo_output_raw->servo5_raw = 950;
-	servo_output_raw->servo6_raw = 950;
-	servo_output_raw->servo7_raw = 950;
-	servo_output_raw->servo8_raw = 1550;
-	servo_output_raw->port = 1;
 
     while(1)
     {
@@ -115,20 +104,19 @@ int main(void)
 //      for(i=0; i<10; i++) testTxBuf[i]++;
 //    delay();
 //          Auto_PRINTLOG(1);//break point>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-//                mavlink_send_message(0, MSG_HEARTBEAT, 0);
+                mavlink_send_message(0, MSG_HEARTBEAT, 0);
 //Auto_PRINTLOG(4);//break point>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-//                mavlink_send_message(0, MSG_ATTITUDE, 0);
-Auto_PRINTLOG(5);//break point>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                mavlink_send_message(0, MSG_ATTITUDE, 0);
+//Auto_PRINTLOG(5);//break point>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
                 mavlink_send_message(0, MSG_AHRS, 0);
-                
-
-			mavlink_test_servo_output_raw(mavlink_system.sysid,mavlink_system.compid,msg);
-			mavlink_test_minimal(mavlink_system.sysid,mavlink_system.compid, msg);
-
+//                mavlink_test_minimal(15, 7, msg);
             }
-            update();
-			
+           	 update();
         }
+		while ($cond$)
+			{
+			$end$
+			}
 #ifdef TEST_UART
         serial_write_buf(testTxBuf, 10);
         delay();

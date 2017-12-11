@@ -29,8 +29,10 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_it.h"
- 
-
+ #include "usart.h"
+#include "fifo.h"
+extern fifo_t uart_rx_fifo, uart_tx_fifo;
+extern uint16_t tranlTimer;
 /** @addtogroup Template_Project
   * @{
   */
@@ -141,8 +143,15 @@ void PendSV_Handler(void)
   */
 void SysTick_Handler(void)
 {
- 
+	static uint8_t _Timer20msCount;
+		
+	tranlTimer++;
+	if(++_Timer20msCount >= 20){
+		_Timer20msCount = 0;
+		
+	}		
 }
+
 
 /******************************************************************************/
 /*                 STM32F4xx Peripherals Interrupt Handlers                   */

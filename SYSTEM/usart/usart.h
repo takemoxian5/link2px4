@@ -1,6 +1,7 @@
 #ifndef __USART_H
 #define __USART_H
-#include "stm32f4xx_conf.h"
+//#include "stm32f4xx_conf.h"
+#include "stm32f4xx.h" 
 //#include "stm32f0xx.h"
 #include <stdio.h>
 
@@ -15,8 +16,8 @@ u16 serial_available(void);
 #define DEBUG_SEND_MSG
 #ifdef DEBUG_SEND_MSG
 extern char  test_cntxx[20];
-#define  Auto_PRINTLOG(x)  {if(test_cntxx[x]){printf("new test======%d===============finished!\r\n",x);\
-	test_cntxx[x]=0;}}
+#define  Auto_PRINTLOG(x)  {if(test_cntxx[x]!=0xa5){printf("====================%d=finished!\r\n",x);\
+	test_cntxx[x]=0xa5;}}
 #endif
 
 #endif /* __USART_H */

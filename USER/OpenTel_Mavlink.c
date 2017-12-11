@@ -296,8 +296,9 @@ void update(void)
         if (mavlink_parse_char(chan, c, &msg, &status)) {
             mavlink_active = true;
             handleMessage(&msg);
-	printf("new msg====== %s===============get!\r\n",msg);
 Auto_PRINTLOG(2);//break point>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+			printf("new msg====== %s===============get!\r\n",msg);
+
         }
     }
 }
