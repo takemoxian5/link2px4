@@ -168,9 +168,9 @@ MAVLINK_HELPER void _mavlink_resend_uart(mavlink_channel_t chan, const mavlink_m
  */
 MAVLINK_HELPER uint16_t mavlink_msg_to_send_buffer(uint8_t *buffer, const mavlink_message_t *msg)
 {
+	memcpy(buffer, ( uint8_t *)&msg->magic, MAVLINK_NUM_HEADER_BYTES + (uint16_t)msg->len);
+
 	uint8_t *ck = buffer + (MAVLINK_NUM_HEADER_BYTES + (uint16_t)msg->len);
-	
-	memcpy(buffer, (uint8_t *)&msg->magic, MAVLINK_NUM_HEADER_BYTES + (uint16_t)msg->len);
 
 	ck[0] = (uint8_t)(msg->checksum & 0xFF);
 	ck[1] = (uint8_t)(msg->checksum >> 8);
@@ -191,6 +191,7 @@ union __mavlink_bitfield {
 MAVLINK_HELPER void mavlink_start_checksum(mavlink_message_t* msg)
 {
 	crc_init(&msg->checksum);
+	
 }
 
 MAVLINK_HELPER void mavlink_update_checksum(mavlink_message_t* msg, uint8_t c)
@@ -276,6 +277,7 @@ MAVLINK_HELPER uint8_t mavlink_frame_char_buffer(mavlink_message_t* rxmsg,
 			status->parse_state = MAVLINK_PARSE_STATE_GOT_STX;
 			rxmsg->len = 0;
 			rxmsg->magic = c;
+			printf("crc_init2\n");
 			mavlink_start_checksum(rxmsg);
 		}
 		break;
@@ -357,6 +359,8 @@ MAVLINK_HELPER uint8_t mavlink_frame_char_buffer(mavlink_message_t* rxmsg,
 		mavlink_update_checksum(rxmsg, MAVLINK_MESSAGE_CRC(rxmsg->msgid));
 #endif
 		if (c != (rxmsg->checksum & 0xFF)) {
+			printf("checksum1======+=%d==============checksum!\r\n",c);
+			printf("checksum2======+=%d==============checksum!\r\n",rxmsg->checksum);
 			status->parse_state = MAVLINK_PARSE_STATE_GOT_BAD_CRC1;
 		} else {
 			status->parse_state = MAVLINK_PARSE_STATE_GOT_CRC1;
@@ -368,6 +372,10 @@ MAVLINK_HELPER uint8_t mavlink_frame_char_buffer(mavlink_message_t* rxmsg,
 	case MAVLINK_PARSE_STATE_GOT_BAD_CRC1:
 		if (status->parse_state == MAVLINK_PARSE_STATE_GOT_BAD_CRC1 || c != (rxmsg->checksum >> 8)) {
 			// got a bad CRC message
+			if (status->parse_state == MAVLINK_PARSE_STATE_GOT_BAD_CRC1)
+			printf("parse_state======+===============parse_state!\r\n");
+			else
+			printf("checksum======+===============checksum!\r\n");
 			status->msg_received = MAVLINK_FRAMING_BAD_CRC;
 		} else {
 			// Successfully got message
@@ -516,12 +524,14 @@ MAVLINK_HELPER uint8_t mavlink_parse_char(uint8_t chan, uint8_t c, mavlink_messa
 	    mavlink_message_t* rxmsg = mavlink_get_channel_buffer(chan);
 	    mavlink_status_t* status = mavlink_get_channel_status(chan);
 	    status->parse_error++;
+Auto_PRINTLOG(6);//break point>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	    status->msg_received = MAVLINK_FRAMING_INCOMPLETE;
 	    status->parse_state = MAVLINK_PARSE_STATE_IDLE;
 	    if (c == MAVLINK_STX)
 	    {
 		    status->parse_state = MAVLINK_PARSE_STATE_GOT_STX;
 		    rxmsg->len = 0;
+			printf("crc_init1\n");
 		    mavlink_start_checksum(rxmsg);
 	    }
 	    return 0;

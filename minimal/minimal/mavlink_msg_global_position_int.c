@@ -360,5 +360,15 @@ void mavlink_msg_global_position_int_decode(const mavlink_message_t* msg, mavlin
 	global_position_int->hdg = mavlink_msg_global_position_int_get_hdg(msg);
 #else
 	memcpy(global_position_int, _MAV_PAYLOAD(msg), MAVLINK_MSG_ID_GLOBAL_POSITION_INT_LEN);
+#if 1//def DEBUG_SEND_MSG
+printf("time_boot_ms =%d\n", global_position_int->time_boot_ms);
+printf("lat =%d\n" , global_position_int->lat);
+printf("lon =%d\n", global_position_int->lon);
+printf("alt =%d\n\n", global_position_int->alt);
+printf("vx =%d\n\n", global_position_int->vx);
+printf("vy =%d\n\n", global_position_int->vy);
+printf("vz =%d\n\n", global_position_int->vz);
+#endif
+
 #endif
 }

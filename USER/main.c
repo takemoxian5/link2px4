@@ -85,8 +85,8 @@ int main(void)
     TIM3_Int_Init(0xFFFF,8400-1);   //��ʱ��ʱ��84M����Ƶϵ��8400������84M/8400=10Khz�ļ���Ƶ��
     printf("STM32F4Discovery Board initialization finished!\r\n");
 
-    mavlink_system.sysid = MAV_TYPE_GENERIC;
-    mavlink_system.compid =MAV_AUTOPILOT_GENERIC;
+    mavlink_system.sysid = MAV_TYPE_FIXED_WING;//MAV_TYPE_GENERIC;
+    mavlink_system.compid =MAV_AUTOPILOT_PIXHAWK;//MAV_AUTOPILOT_GENERIC;
 	mavlink_servo_output_raw_t* servo_output_raw;
 	servo_output_raw->time_usec = 20000000;
 	servo_output_raw->servo1_raw = 950;
@@ -98,32 +98,30 @@ int main(void)
 	servo_output_raw->servo7_raw = 950;
 	servo_output_raw->servo8_raw = 1550;
 	servo_output_raw->port = 1;
+//	global_position_int->vx=128;
 
     while(1)
     {
-        mavlink_send_message(0, MSG_HEARTBEAT, 0);
-        mavlink_send_message(0, MSG_LOCATION, 0);
+//        mavlink_send_message(0, MSG_HEARTBEAT, 0);
+//        mavlink_send_message(0, MSG_LOCATION, 0);
         while(1)
         {
             if(tranlTimer > 100)
             {
                 tranlTimer = 0;
-//Auto_PRINTLOG(3);//break point>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 //                  serial_write_buf(testTxBuf, 9);
 //      delay();
 //      u8 i;
 //      for(i=0; i<10; i++) testTxBuf[i]++;
 //    delay();
-//          Auto_PRINTLOG(1);//break point>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-//                mavlink_send_message(0, MSG_HEARTBEAT, 0);
-//Auto_PRINTLOG(4);//break point>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+                mavlink_send_message(0, MSG_HEARTBEAT, 0);
 //                mavlink_send_message(0, MSG_ATTITUDE, 0);
-Auto_PRINTLOG(5);//break point>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-                mavlink_send_message(0, MSG_AHRS, 0);
+//				mavlink_send_message(0, MSG_LOCATION, 0);
+//                mavlink_send_message(0, MSG_AHRS, 0);
                 
 
-			mavlink_test_servo_output_raw(mavlink_system.sysid,mavlink_system.compid,msg);
-			mavlink_test_minimal(mavlink_system.sysid,mavlink_system.compid, msg);
+			   mavlink_test_servo_output_raw(mavlink_system.sysid,mavlink_system.compid,msg);
+//			mavlink_test_minimal(mavlink_system.sysid,mavlink_system.compid, msg);
 
             }
             update();

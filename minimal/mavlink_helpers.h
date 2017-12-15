@@ -3,10 +3,21 @@
 #define  _MAVLINK_HELPERS_H_
 
 #include "protocol.h"
+#include "usart.h"
+
+
 
 #ifndef MAVLINK_HELPER
 #define MAVLINK_HELPER
 #endif
+
+//Start G201712151288 ChenYang  移植error
+//extern mavlink_system_t mavlink_system;     
+//MAVLINK_HELPER void _mavlink_send_uart(mavlink_channel_t chan, const char *buf, uint16_t len)
+//{
+//	serial_write_buf((uint8_t*)buf, len);
+//}
+//End G201712151288 ChenYang 
 
 /* decls in sync with those in mavlink_helpers.h */
 #ifndef MAVLINK_GET_CHANNEL_STATUS

@@ -5,6 +5,8 @@
 //#include "stm32f0xx.h"
 #include <stdio.h>
 
+#include "../minimal/minimal/mavlink.h"
+
 #define UART_TX_BUFFER_SIZE        255
 #define UART_RX_BUFFER_SIZE        255
 void serial_open(uint8_t port, uint32_t baud);
@@ -17,7 +19,7 @@ u16 serial_available(void);
 #ifdef DEBUG_SEND_MSG
 extern char  test_cntxx[20];
 #define  Auto_PRINTLOG(x)  {if(test_cntxx[x]!=0xa5){printf("====================%d=finished!\r\n",x);\
-	test_cntxx[x]=0xa5;}}
+	test_cntxx[x]=0;}}
 #endif
 
 #endif /* __USART_H */

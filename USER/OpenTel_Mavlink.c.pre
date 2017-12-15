@@ -7,11 +7,10 @@
 
 //Add By BigW
 typedef uint8_t bool;
-typedef struct
-{
+typedef struct {
     char c;
 } prog_char_t;
-
+	
 // This is the state of the flight control system
 // There are multiple states defined such as STABILIZE, ACRO,
 static int8_t control_mode = STABILIZE;
@@ -69,18 +68,17 @@ static NOINLINE void send_heartbeat(mavlink_channel_t chan)
     // the APM flight mode and has a well defined meaning in the
     // ArduPlane documentation
     base_mode = MAV_MODE_FLAG_STABILIZE_ENABLED;
-    switch (control_mode)
-    {
-        case AUTO:
-        case RTL:
-        case LOITER:
-        case GUIDED:
-        case CIRCLE:
-            base_mode |= MAV_MODE_FLAG_GUIDED_ENABLED;
-            // note that MAV_MODE_FLAG_AUTO_ENABLED does not match what
-            // APM does in any mode, as that is defined as "system finds its own goal
-            // positions", which APM does not currently do
-            break;
+    switch (control_mode) {
+    case AUTO:
+    case RTL:
+    case LOITER:
+    case GUIDED:
+    case CIRCLE:
+        base_mode |= MAV_MODE_FLAG_GUIDED_ENABLED;
+        // note that MAV_MODE_FLAG_AUTO_ENABLED does not match what
+        // APM does in any mode, as that is defined as "system finds its own goal
+        // positions", which APM does not currently do
+        break;
     }
 
     // all modes except INITIALISING have some form of manual
@@ -92,8 +90,7 @@ static NOINLINE void send_heartbeat(mavlink_channel_t chan)
 #endif
 
     // we are armed if we are not initialising
-    if (0) //motors.armed()) {
-    {
+    if (0){//motors.armed()) {
         base_mode |= MAV_MODE_FLAG_SAFETY_ARMED;
     }
 
@@ -121,7 +118,7 @@ static NOINLINE void send_attitude(mavlink_channel_t chan)
         ++buf[6],//omega.y,
         ++buf[7]);//omega.z);
 }
-
+ 
 static void NOINLINE send_location(mavlink_channel_t chan)
 {
     //Matrix3f rot = ahrs.get_dcm_matrix(); // neglecting angle of attack for now
@@ -169,48 +166,45 @@ static bool mavlink_try_send_message(mavlink_channel_t chan, enum ap_message id,
 {
     int16_t payload_space = serial_free();
 
-    if (telemetry_delayed(chan))
-    {
+    if (telemetry_delayed(chan)) {
         return false;
     }
 
-    switch(id)
-    {
-        case MSG_HEARTBEAT:
-            CHECK_PAYLOAD_SIZE(HEARTBEAT);
-            send_heartbeat(chan);
-            break;
+    switch(id) {
+      case MSG_HEARTBEAT:
+        CHECK_PAYLOAD_SIZE(HEARTBEAT);
+        send_heartbeat(chan);
+        break;
 
-        case MSG_ATTITUDE:
-            CHECK_PAYLOAD_SIZE(ATTITUDE);
-            send_attitude(chan);
-            break;
+      case MSG_ATTITUDE:
+        CHECK_PAYLOAD_SIZE(ATTITUDE);
+        send_attitude(chan);
+        break;
 
-        case MSG_LOCATION:
-            CHECK_PAYLOAD_SIZE(GLOBAL_POSITION_INT);
-            send_location(chan);
-            break;
+      case MSG_LOCATION:
+        CHECK_PAYLOAD_SIZE(GLOBAL_POSITION_INT);
+        send_location(chan);
+        break;
+		
+      case MSG_AHRS:
+        CHECK_PAYLOAD_SIZE(AHRS);
+        send_ahrs(chan);
+        break;
 
-        case MSG_AHRS:
-            CHECK_PAYLOAD_SIZE(AHRS);
-            send_ahrs(chan);
-            break;
+      case MSG_STATUSTEXT:
+        CHECK_PAYLOAD_SIZE(STATUSTEXT);
+        send_statustext(chan);
+        break;
 
-        case MSG_STATUSTEXT:
-            CHECK_PAYLOAD_SIZE(STATUSTEXT);
-            send_statustext(chan);
-            break;
-
-        default:
-            break;
+		  default:
+			  break;
     }
     return true;
 }
 
 
 #define MAX_DEFERRED_MESSAGES MSG_RETRY_DEFERRED
-static struct mavlink_queue
-{
+static struct mavlink_queue {
     enum ap_message deferred_messages[MAX_DEFERRED_MESSAGES];
     uint8_t next_deferred_message;
     uint8_t num_deferred_messages;
@@ -223,54 +217,44 @@ void mavlink_send_message(mavlink_channel_t chan, enum ap_message id, uint16_t p
     struct mavlink_queue *q = &mavlink_queue[(uint8_t)chan];
 
     // see if we can send the deferred messages, if any
-    while (q->num_deferred_messages != 0)
-    {
+    while (q->num_deferred_messages != 0) {
         if (!mavlink_try_send_message(chan,
                                       q->deferred_messages[q->next_deferred_message],
-                                      packet_drops))
-        {
+                                      packet_drops)) {
             break;
         }
         q->next_deferred_message++;
-        if (q->next_deferred_message == MAX_DEFERRED_MESSAGES)
-        {
+        if (q->next_deferred_message == MAX_DEFERRED_MESSAGES) {
             q->next_deferred_message = 0;
         }
         q->num_deferred_messages--;
     }
 
-    if (id == MSG_RETRY_DEFERRED)
-    {
+    if (id == MSG_RETRY_DEFERRED) {
         return;
     }
 
     // this message id might already be deferred
-    for (i=0, nextid = q->next_deferred_message; i < q->num_deferred_messages; i++)
-    {
-        if (q->deferred_messages[nextid] == id)
-        {
+    for (i=0, nextid = q->next_deferred_message; i < q->num_deferred_messages; i++) {
+        if (q->deferred_messages[nextid] == id) {
             // its already deferred, discard
             return;
         }
         nextid++;
-        if (nextid == MAX_DEFERRED_MESSAGES)
-        {
+        if (nextid == MAX_DEFERRED_MESSAGES) {
             nextid = 0;
         }
     }
 
     if (q->num_deferred_messages != 0 ||
-        !mavlink_try_send_message(chan, id, packet_drops))
-    {
+        !mavlink_try_send_message(chan, id, packet_drops)) {
         // can't send it now, so defer it
-        if (q->num_deferred_messages == MAX_DEFERRED_MESSAGES)
-        {
+        if (q->num_deferred_messages == MAX_DEFERRED_MESSAGES) {
             // the defer buffer is full, discard
             return;
         }
         nextid = q->next_deferred_message + q->num_deferred_messages;
-        if (nextid >= MAX_DEFERRED_MESSAGES)
-        {
+        if (nextid >= MAX_DEFERRED_MESSAGES) {
             nextid -= MAX_DEFERRED_MESSAGES;
         }
         q->deferred_messages[nextid] = id;
@@ -280,20 +264,16 @@ void mavlink_send_message(mavlink_channel_t chan, enum ap_message id, uint16_t p
 
 void mavlink_send_text(mavlink_channel_t chan, enum gcs_severity severity, char *str)
 {
-    if (telemetry_delayed(chan))
-    {
+    if (telemetry_delayed(chan)) {
         return;
     }
 
-    if (severity == SEVERITY_LOW)
-    {
+    if (severity == SEVERITY_LOW) {
         // send via the deferred queuing system
         pending_status.severity = (uint8_t)severity;
         mav_array_memcpy((char *)pending_status.text, str, sizeof(pending_status.text));
         mavlink_send_message(chan, MSG_STATUSTEXT, 0);
-    }
-    else
-    {
+    } else {
         // send immediately
         mavlink_msg_statustext_send(
             chan,
@@ -313,15 +293,13 @@ void update(void)
     // process received bytes
     while(serial_available())
     {
-        uint8_t c = serial_read_ch();
+        uint8_t c = serial_read_ch(); 
 
         // Try to get a new message
-        if (mavlink_parse_char(chan, c, &msg, &status))
-        {
+        if (mavlink_parse_char(chan, c, &msg, &status)) {
             mavlink_active = true;
             handleMessage(&msg);
-			if(msg.msgid!=30)
-            printf("new msg msgid======+===========%d====get!\r\n",msg.msgid);
+			printf("new msg====== %d===============get!\r\n",msg.len);
 
         }
     }
@@ -331,47 +309,40 @@ void update(void)
 void handleMessage(mavlink_message_t* msg)
 {
     //struct Location tell_command = {};                                  // command for telemetry
-    switch (msg->msgid)
-    {
-        case MAVLINK_MSG_ID_HEARTBEAT:
-        {
-			Auto_PRINTLOG(5);//break point>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-            mavlink_msg_heartbeat_decode(msg, &heartbeat);
+    switch (msg->msgid) {
+        case MAVLINK_MSG_ID_HEARTBEAT: {
+					  mavlink_msg_heartbeat_decode(msg, &heartbeat);  					
             break;
         }
-
-        case MAVLINK_MSG_ID_ATTITUDE:
-        {
-
-//            Auto_PRINTLOG(1);//break point>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-            mavlink_msg_attitude_decode(msg, &attitude);
-            break;
-        }
-
-        case MAVLINK_MSG_ID_GLOBAL_POSITION_INT:
-        {
-            Auto_PRINTLOG(2);//break point>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-            mavlink_msg_global_position_int_decode(msg, &position);
-            break;
-        }
-
-        case MAVLINK_MSG_ID_AHRS:
-        {
-            Auto_PRINTLOG(3);//break point>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-            mavlink_msg_ahrs_decode(msg, &ahrs);
-            break;
-        }
-
-        case MAVLINK_MSG_ID_SYS_STATUS:
-        {
-            Auto_PRINTLOG(4);//break point>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-            mavlink_msg_sys_status_decode(msg, &state);
-            break;
-        }
-        default:
-            break;
+				
+				case MAVLINK_MSG_ID_ATTITUDE: {
+					
+Auto_PRINTLOG(1);//break point>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+					  mavlink_msg_attitude_decode(msg, &attitude);
+					  break;
+				}
+				
+				case MAVLINK_MSG_ID_GLOBAL_POSITION_INT: {
+Auto_PRINTLOG(2);//break point>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+					  mavlink_msg_global_position_int_decode(msg, &position);
+					  break;
+				}
+				
+				case MAVLINK_MSG_ID_AHRS: {
+Auto_PRINTLOG(3);//break point>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+					  mavlink_msg_ahrs_decode(msg, &ahrs); 
+					  break;
+				}
+			
+				case MAVLINK_MSG_ID_SYS_STATUS: {
+Auto_PRINTLOG(4);//break point>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+					mavlink_msg_sys_status_decode(msg, &state);	
+					break;
+					}
+				default:
+					  break;
     }     // end switch
-
+		
 } // end handle mavlink
 
 

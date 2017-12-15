@@ -448,5 +448,18 @@ void mavlink_msg_sys_status_decode(const mavlink_message_t* msg, mavlink_sys_sta
 	sys_status->battery_remaining = mavlink_msg_sys_status_get_battery_remaining(msg);
 #else
 	memcpy(sys_status, _MAV_PAYLOAD(msg), MAVLINK_MSG_ID_SYS_STATUS_LEN);
+#if 1//def DEBUG_SEND_MSG
+printf("onboard_control_sensors_present =%d\n", sys_status->onboard_control_sensors_present);
+printf("onboard_control_sensors_enabled =%d\n", sys_status->onboard_control_sensors_enabled);
+printf("onboard_control_sensors_health =%d\n", sys_status->onboard_control_sensors_health);
+printf("load =%d\n", sys_status->load);
+printf("voltage_battery =%d\n", sys_status->voltage_battery);
+printf("current_battery =%d\n", sys_status->current_battery);
+printf("drop_rate_comm =%d\n", sys_status->drop_rate_comm);
+printf("errors_comm =%d\n", sys_status->errors_comm);
+printf("battery_remaining =%d\n", sys_status->battery_remaining);
+printf("voltage_battery =%d\n", sys_status->voltage_battery);
+#endif
+
 #endif
 }

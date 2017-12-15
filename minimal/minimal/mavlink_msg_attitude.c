@@ -318,5 +318,19 @@ void mavlink_msg_attitude_decode(const mavlink_message_t* msg, mavlink_attitude_
 	attitude->yawspeed = mavlink_msg_attitude_get_yawspeed(msg);
 #else
 	memcpy(attitude, _MAV_PAYLOAD(msg), MAVLINK_MSG_ID_ATTITUDE_LEN);
+
+//attitude->time_boot_ms = mavlink_msg_attitude_get_time_boot_ms(msg);
+//attitude->roll = mavlink_msg_attitude_get_roll(msg);
+//attitude->pitch = mavlink_msg_attitude_get_pitch(msg);
+//attitude->yaw = mavlink_msg_attitude_get_yaw(msg);
+//attitude->rollspeed = mavlink_msg_attitude_get_rollspeed(msg);
+//attitude->pitchspeed = mavlink_msg_attitude_get_pitchspeed(msg);
+//attitude->yawspeed = mavlink_msg_attitude_get_yawspeed(msg);
+printf("time_boot_ms =%d\n", attitude->time_boot_ms);
+printf("roll =%f\n" , attitude->roll);
+printf("pitch =%f\n", attitude->pitch);
+printf("yaw =%f\n\n", attitude->yaw);
+printf("rollspeed =%f\n\n", attitude->rollspeed);
+
 #endif
 }
