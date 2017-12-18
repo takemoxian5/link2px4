@@ -24,10 +24,10 @@ void crc_accumulate(uint8_t data, uint16_t *crcAccum)
 
         tmp = data ^ (uint8_t)(*crcAccum &0xff);// 低8位亦或。  ==无进位的累加？
         tmp ^= (tmp<<4);                    //低4位 叠加到 高4位
-        *crcAccum = (*crcAccum>>8) ^ (tmp<<8)^ (tmp <<3) ^ (tmp>>4);
+        *crcAccum = (*crcAccum>>8) ^ (tmp<<8)^ (tmp <<3) ^ (tmp>>4);//big-endian ，高位存放低位校验和，
+#ifdef DEBUG_CKS
 		printf("%x        %02x\r\n",*crcAccum,data);
-//        *crcAccum = (*crcAccum>>8) ^ (tmp<<8) ^ (tmp <<3) ^ (tmp>>4);//big-endian ，高位存放低位校验和，
-        //
+#endif
 }
 #endif
 

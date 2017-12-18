@@ -4,7 +4,6 @@
 #include "usart.h"
 
 extern mavlink_system_t mavlink_system;
-#define DEBUG_CKS
 
 /*
  * Internal function to give access to the channel status for each channel
@@ -131,10 +130,14 @@ MAVLINK_HELPER void _mav_finalize_message_chan_send(mavlink_channel_t chan, uint
 	status->current_tx_seq++;
 	//FE后前5个byte 的校验码
 	checksum = crc_calculate((const uint8_t*)&buf[1], MAVLINK_CORE_HEADER_LEN);
+#ifdef DEBUG_CKS
 	printf("core checksum==%x     %x\r\n",checksum,buf[2]);
+#endif
 	//叠加上数据段 后的校验码
 	crc_accumulate_buffer(&checksum, packet, length);         
+#ifdef DEBUG_CKS
 	printf("end checksum==%x\r\n",checksum);
+#endif
 #if MAVLINK_CRC_EXTRA
 	//叠加额外动态校验码（每种信息对应一个crc_extra）后计算校验码
 	crc_accumulate(crc_extra, &checksum);
@@ -320,21 +323,18 @@ MAVLINK_HELPER uint8_t mavlink_frame_char_buffer(mavlink_message_t* rxmsg,
 
 	case MAVLINK_PARSE_STATE_GOT_LENGTH:
 		rxmsg->seq = c;
-Auto_PRINTLOG(1);//break point>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 		mavlink_update_checksum(rxmsg, c);
 		status->parse_state = MAVLINK_PARSE_STATE_GOT_SEQ;
 		break;
 
 	case MAVLINK_PARSE_STATE_GOT_SEQ:
 		rxmsg->sysid = c;
-Auto_PRINTLOG(2);//break point>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 		mavlink_update_checksum(rxmsg, c);
 		status->parse_state = MAVLINK_PARSE_STATE_GOT_SYSID;
 		break;
 
 	case MAVLINK_PARSE_STATE_GOT_SYSID:
 		rxmsg->compid = c;
-Auto_PRINTLOG(3);//break point>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 		mavlink_update_checksum(rxmsg, c);
 		status->parse_state = MAVLINK_PARSE_STATE_GOT_COMPID;
 		break;
@@ -343,14 +343,12 @@ Auto_PRINTLOG(3);//break point>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 #ifdef MAVLINK_CHECK_MESSAGE_LENGTH
 	        if (rxmsg->len != MAVLINK_MESSAGE_LENGTH(c))
 		{
-Auto_PRINTLOG(5);//break point>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 			status->parse_error++;
 			status->parse_state = MAVLINK_PARSE_STATE_IDLE;
 			break;
 	    }
 #endif
 		rxmsg->msgid = c;
-Auto_PRINTLOG(4);//break point>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 		mavlink_update_checksum(rxmsg, c);
 		if (rxmsg->len == 0)
 		{
@@ -376,8 +374,10 @@ Auto_PRINTLOG(4);//break point>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 		mavlink_update_checksum(rxmsg, MAVLINK_MESSAGE_CRC(rxmsg->msgid));      //添加动态校验
 #endif
 		if (c != (rxmsg->checksum & 0xFF)) {
-			printf("checksum1======+=%d==============checksum!\r\n",c);
-			printf("checksum2======+=%d==============checksum!\r\n",rxmsg->checksum);
+#ifdef DEBUG_CKS
+			printf("checksum1======+=%x==============checksum!\r\n",c);
+			printf("checksum2======+=%x==============checksum!\r\n",rxmsg->checksum);
+#endif
 			status->parse_state = MAVLINK_PARSE_STATE_GOT_BAD_CRC1;
 		} else {
 			status->parse_state = MAVLINK_PARSE_STATE_GOT_CRC1;
@@ -389,10 +389,12 @@ Auto_PRINTLOG(4);//break point>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 	case MAVLINK_PARSE_STATE_GOT_BAD_CRC1:
 		if (status->parse_state == MAVLINK_PARSE_STATE_GOT_BAD_CRC1 || c != (rxmsg->checksum >> 8)) {
 			// got a bad CRC message
+#ifdef DEBUG_CKS
 			if (status->parse_state == MAVLINK_PARSE_STATE_GOT_BAD_CRC1)
 			printf("parse_state======+===============parse_state!\r\n");
 			else
 			printf("checksum======+===============checksum!\r\n");
+#endif
 			status->msg_received = MAVLINK_FRAMING_BAD_CRC;
 		} else {
 			// Successfully got message
