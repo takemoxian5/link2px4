@@ -85,7 +85,7 @@ int main(void)
     TIM3_Int_Init(0xFFFF,8400-1);   //��ʱ��ʱ��84M����Ƶϵ��8400������84M/8400=10Khz�ļ���Ƶ��
     printf("STM32F4Discovery Board initialization finished!\r\n");
 
-    mavlink_system.sysid = MAV_TYPE_FIXED_WING;//MAV_TYPE_GENERIC;
+    mavlink_system.sysid =MAV_TYPE_GCS;//地面站角色 MAV_TYPE_FIXED_WING;//MAV_TYPE_GENERIC;
     mavlink_system.compid =MAV_AUTOPILOT_PIXHAWK;//MAV_AUTOPILOT_GENERIC;
 	mavlink_servo_output_raw_t* servo_output_raw;
 	servo_output_raw->time_usec = 20000000;
@@ -106,7 +106,7 @@ int main(void)
 //        mavlink_send_message(0, MSG_LOCATION, 0);
         while(1)
         {
-            if(tranlTimer > 100)
+            if(tranlTimer > 600)
             {
                 tranlTimer = 0;
 //                  serial_write_buf(testTxBuf, 9);
@@ -114,7 +114,13 @@ int main(void)
 //      u8 i;
 //      for(i=0; i<10; i++) testTxBuf[i]++;
 //    delay();
-                mavlink_send_message(0, MSG_HEARTBEAT, 0);
+//                mavlink_send_message(0, MSG_HEARTBEAT, 0);
+
+//				mavlink_send_message(0, MSG_SIMSTATE, 0);
+//				
+//				
+//				mavlink_send_message(0, MSG_HWSTATUS, 0);
+
 //                mavlink_send_message(0, MSG_ATTITUDE, 0);
 //				mavlink_send_message(0, MSG_LOCATION, 0);
 //                mavlink_send_message(0, MSG_AHRS, 0);

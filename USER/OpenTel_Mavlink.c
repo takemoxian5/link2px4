@@ -335,7 +335,6 @@ void handleMessage(mavlink_message_t* msg)
     {
         case MAVLINK_MSG_ID_HEARTBEAT:
         {
-			Auto_PRINTLOG(5);//break point>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
             mavlink_msg_heartbeat_decode(msg, &heartbeat);
             break;
         }
@@ -343,28 +342,24 @@ void handleMessage(mavlink_message_t* msg)
         case MAVLINK_MSG_ID_ATTITUDE:
         {
 
-//            Auto_PRINTLOG(1);//break point>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
             mavlink_msg_attitude_decode(msg, &attitude);
             break;
         }
 
         case MAVLINK_MSG_ID_GLOBAL_POSITION_INT:
         {
-            Auto_PRINTLOG(2);//break point>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
             mavlink_msg_global_position_int_decode(msg, &position);
             break;
         }
 
         case MAVLINK_MSG_ID_AHRS:
         {
-            Auto_PRINTLOG(3);//break point>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
             mavlink_msg_ahrs_decode(msg, &ahrs);
             break;
         }
 
         case MAVLINK_MSG_ID_SYS_STATUS:
         {
-            Auto_PRINTLOG(4);//break point>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
             mavlink_msg_sys_status_decode(msg, &state);
             break;
         }
