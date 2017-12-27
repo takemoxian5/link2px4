@@ -428,99 +428,69 @@ void receiverSend(uint8_t *dat,uint8_t size)
 
 void remote_update(void)
 {
-    if (myReceiver.cmdReadyFlag == 1)
-    {
-        myReceiver.cmdReadyFlag = 0;
-    }
-    else
-    {
-        // No full command has been received yet.
-        return;
-    }
-    cnt++;
-    if ((myReceiver.cmdIn[0] != 0xFA) || (myReceiver.cmdIn[1] != 0xFB))
-    {
-        if(cnt>1)
-        {
-            cnt=0;
-        }
-    }
-    switch(myReceiver.cmdIn[2])
-    {
-        case 0x05:           //飞控状态传送
-//			  if(api->getBroadcastData().status==2)
-//			  {
-//				  if(startState==0)
-//				  {
-//					  if(api->getBroadcastData().pos.health>3)
-//					  {
-//						  startState  = 1;
-//						  startlatitude = api->getBroadcastData().pos.latitude;
-//						  startlongitude = api->getBroadcastData().pos.longitude;
-//					  }
-//				  }
-//			  }else{
-//				  startState  = 0;
-//			  }
-//			  f32Distance=f64Distance = get_distance(startlatitude,startlongitude,\
-//									   api->getBroadcastData().pos.latitude,\
-//									   api->getBroadcastData().pos.longitude);
-//			  
-//			f32Height = api->getBroadcastData().pos.height;
-//			  planeSpeed.x = api->getBroadcastData().v.x;
-//			  planeSpeed.y = api->getBroadcastData().v.y;
-//			  planeSpeed.z = api->getBroadcastData().v.z;
-//			  Health = api->getBroadcastData().pos.health;
-//			
-//			  arm_sqrt_f32(planeSpeed.x*planeSpeed.x+planeSpeed.y*planeSpeed.y , &f32Dspeed);		  
-//			  f32Hspeed = planeSpeed.z;
-//			  if(f32Height<0)f32Height = -f32Height;
-//			  u16Height = (uint16_t)(f32Height*100);//mm
-//			  u32Distance =(uint32_t)(f32Distance*10);//dm
-//			  u16Distance = (uint16_t)u32Distance;
-//			  
-//			  u16Dspeed = (uint16_t)(f32Dspeed*10);   //m/s
-//			  s8Hspeed	= (int8_t)(f32Hspeed*10);	  //m/s
+	if (myReceiver.cmdReadyFlag == 1)
+	{
+	  myReceiver.cmdReadyFlag = 0;
+	}
+	else
+	{ // No full command has been received yet.
+	  return;
+	}
+	cnt++;
+	  if ((myReceiver.cmdIn[0] != 0xFA) || (myReceiver.cmdIn[1] != 0xFB))
+		{
+	  	  if(cnt>1)
+			{
+			  cnt=0;	
+			}
+		}
+	switch(myReceiver.cmdIn[2])	
+{
+		case 0x05:
 
-            receiverPutChar(0xfa);
-            size=10;
-            sendBuf[0] = size;
-            sendBuf[1] = type;
-            memcpy(&sendBuf[2],&u16Height,2);
-            memcpy(&sendBuf[4],&u16Distance,2);
-            memcpy(&sendBuf[6],&u16Dspeed,2);
-            memcpy(&sendBuf[8],&s8Hspeed,1);
-            memcpy(&sendBuf[9],&Health,1);
-            receiverSend(sendBuf,10);
-            receiverPutChar(0xfe);
-            break;
-        case 0x06:
-            break;
-        case 0x07:
+    receiverPutChar(0xfa);
+    size=10;
+    sendBuf[0] = size;
+    sendBuf[1] = type;
+    memcpy(&sendBuf[2],&u16Height,2);
+    memcpy(&sendBuf[4],&u16Distance,2);
+    memcpy(&sendBuf[6],&u16Dspeed,2);
+    memcpy(&sendBuf[8],&s8Hspeed,1);
+    memcpy(&sendBuf[9],&Health,1);
+    receiverSend(sendBuf,10);
+    receiverPutChar(0xfe);
+    break;
 
-            break;
-        case 0x08:
 
-            break;
+  case 0x06:
+   
+    break;
 
-        case 0x09:
+  case 0x07:
 
-            break;
+    break;
+  case 0x08:
 
-        default:
-            break;
-    }
+    break;
+
+  case 0x09:
+
+    break;
+
+  default:
+    break;	
+}
 #ifdef Add_remote_debug
-    u8 i=0;
-    {
-        printf("Test_data ===");
+	u8 i=0;
+{
+		printf("Test_data ===");
 
-        for (i = 1; i < myReceiver.rxLength-1; i++)
-        {
-            printf("%02x",myReceiver.cmdIn[i]);
-        }
-        printf("\r\n");
-    }
+	for (i = 1; i < myReceiver.rxLength-1; i++)
+		{
+		printf("%02x",myReceiver.cmdIn[i]);
+		}
+	printf("\r\n");
+}
 #endif
 }
 

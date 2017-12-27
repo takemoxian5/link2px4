@@ -102,8 +102,8 @@ static NOINLINE void send_heartbeat(mavlink_channel_t chan)
 
     mavlink_msg_heartbeat_send(
         chan,
-        MAV_TYPE_QUADROTOR,
-        MAV_AUTOPILOT_ARDUPILOTMEGA,
+        MAV_TYPE_GCS,//MAV_TYPE_QUADROTOR,
+        MAV_AUTOPILOT_PIXHAWK,//MAV_AUTOPILOT_ARDUPILOTMEGA,
         base_mode,
         custom_mode,
         system_status);
@@ -121,6 +121,34 @@ static NOINLINE void send_attitude(mavlink_channel_t chan)
         ++buf[6],//omega.y,
         ++buf[7]);//omega.z);
 }
+//typedef struct {
+//	 int	 component;
+//	 MAV_CMD command;
+//	 float	 rgParam[7];
+//	 bool	 showError;
+// } MavCommandQueueEntry_t;
+
+//static NOINLINE	void sendMavCommand(int component, MAV_CMD command, bool showError, float param1, float param2, float param3, float param4, float param5, float param6, float param7)
+//{
+//    MavCommandQueueEntry_t entry;
+
+//    entry.component = component;
+//    entry.command = command;
+//    entry.showError = showError;
+//    entry.rgParam[0] = param1;
+//    entry.rgParam[1] = param2;
+//    entry.rgParam[2] = param3;
+//    entry.rgParam[3] = param4;
+//    entry.rgParam[4] = param5;
+//    entry.rgParam[5] = param6;
+//    entry.rgParam[6] = param7;
+//	#if MAVLINK_CRC_EXTRA
+//    _mav_finalize_message_chan_send(chan, MAVLINK_MSG_ID_ATTITUDE, (const char *)&packet, MAVLINK_MSG_ID_ATTITUDE_LEN, MAVLINK_MSG_ID_ATTITUDE_CRC);
+//#else
+//    _mav_finalize_message_chan_send(chan, MAVLINK_MSG_ID_ATTITUDE, (const char *)&packet, MAVLINK_MSG_ID_ATTITUDE_LEN);
+//#endif
+
+//}
 
 static void NOINLINE send_location(mavlink_channel_t chan)
 {
@@ -311,20 +339,55 @@ void update(void)
     status.packet_rx_drop_count = 0;
 
     // process received bytes
-    while(serial_available())
-    {
-        uint8_t c = serial_read_ch();
+    
+//    while(serial_available())
+//    {
+//        uint8_t c = serial_read_ch();
 
-        // Try to get a new message
-        if (mavlink_parse_char(chan, c, &msg, &status))
-        {
-            mavlink_active = true;
-            handleMessage(&msg);
-			if(msg.msgid!=30)
-            printf("new msg msgid======+===========%d====get!\r\n",msg.msgid);
+//        // Try to get a new message
+//        if (mavlink_parse_char(chan, c, &msg, &status))
+//        {
+//            mavlink_active = true;
+//            handleMessage(&msg);
+//			if(msg.msgid!=30)
+//            printf("new msg msgid======+===========%d====get!\r\n",msg.msgid);
 
-        }
-    }
+//        }
+//    }
+//    while(serial_available2())
+//    {
+//        uint8_t oneByte = serial_read_ch();
+//		if (myReceiver.rxIndex == 0)
+//		{
+//		  if (oneByte == 0xFA)
+//		  {
+//			myReceiver.cmdIn[myReceiver.rxIndex] = oneByte;
+//			myReceiver.rxIndex = 1;
+//		  }
+//		  else
+//		  {;}
+//		}
+//		else
+//		{
+//		  if (oneByte == 0xFE)	  //receive a 0xFE would lead to a command-execution
+//		  {
+//			myReceiver.cmdIn[myReceiver.rxIndex] = oneByte;
+//			myReceiver.rxLength = myReceiver.rxIndex + 1;
+//			myReceiver.rxIndex = 0;
+//			myReceiver.cmdReadyFlag = 1;
+//			  
+//			printf("\n xxxxxxxxx Test_data %d == %d:\r\n",myReceiver.rxIndex ,oneByte);
+//		  }
+//		  else
+//		  {
+//			myReceiver.cmdIn[myReceiver.rxIndex] = oneByte;
+//			myReceiver.rxIndex++;
+//		  }
+//		}
+
+//    }
+
+
 }
 
 
@@ -335,14 +398,18 @@ void handleMessage(mavlink_message_t* msg)
     {
         case MAVLINK_MSG_ID_HEARTBEAT:
         {
+#ifdef DEBUG_HANDLE
             mavlink_msg_heartbeat_decode(msg, &heartbeat);
+#endif
             break;
         }
 
         case MAVLINK_MSG_ID_ATTITUDE:
         {
 
+#ifdef DEBUG_HANDLE
             mavlink_msg_attitude_decode(msg, &attitude);
+#endif
             break;
         }
 
@@ -359,6 +426,12 @@ void handleMessage(mavlink_message_t* msg)
         }
 
         case MAVLINK_MSG_ID_SYS_STATUS:
+        {
+            mavlink_msg_sys_status_decode(msg, &state);
+            break;
+        }
+		 
+		case MAVLINK_MSG_ID_LOCAL_POSITION_NED:
         {
             mavlink_msg_sys_status_decode(msg, &state);
             break;

@@ -26,7 +26,7 @@ uint32_t sample_time=0;
 
 mavlink_system_t mavlink_system;
 mavlink_message_t* msg;
-uint8_t testTxBuf[10] = {'1',2,3,4,5,6,7,8,9,10};
+uint8_t testTxBuf[10] = {1,2,3,4,5,6,7,8,9,10};
 uint16_t tranlTimer;
 
 
@@ -114,7 +114,7 @@ int main(void)
 //      u8 i;
 //      for(i=0; i<10; i++) testTxBuf[i]++;
 //    delay();
-//                mavlink_send_message(0, MSG_HEARTBEAT, 0);
+                mavlink_send_message(0, MSG_HEARTBEAT, 0);
 
 //				mavlink_send_message(0, MSG_SIMSTATE, 0);
 //				
@@ -125,13 +125,13 @@ int main(void)
 //				mavlink_send_message(0, MSG_LOCATION, 0);
 //                mavlink_send_message(0, MSG_AHRS, 0);
                 
-
+			   
 			   mavlink_test_servo_output_raw(mavlink_system.sysid,mavlink_system.compid,msg);
 //			mavlink_test_minimal(mavlink_system.sysid,mavlink_system.compid, msg);
 
             }
             update();
-			
+			remote_update();
         }
 #ifdef TEST_UART
         serial_write_buf(testTxBuf, 10);

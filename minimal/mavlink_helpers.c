@@ -389,11 +389,11 @@ MAVLINK_HELPER uint8_t mavlink_frame_char_buffer(mavlink_message_t* rxmsg,
 	case MAVLINK_PARSE_STATE_GOT_BAD_CRC1:
 		if (status->parse_state == MAVLINK_PARSE_STATE_GOT_BAD_CRC1 || c != (rxmsg->checksum >> 8)) {
 			// got a bad CRC message
-#ifdef DEBUG_CKS
+#if 1//def DEBUG_Error
 			if (status->parse_state == MAVLINK_PARSE_STATE_GOT_BAD_CRC1)
-			printf("parse_state======+===============parse_state!\r\n");
+			printf("parse_state======error===============parse_state!\r\n");
 			else
-			printf("checksum======+===============checksum!\r\n");
+			printf("checksum======error============checksum!\r\n");
 #endif
 			status->msg_received = MAVLINK_FRAMING_BAD_CRC;
 		} else {

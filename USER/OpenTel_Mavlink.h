@@ -6,6 +6,11 @@
 #include "../minimal/minimal/minimal.h"
 #include "define.h"
 
+//minimal  添加common 文件
+#include  "../minimal/minimal/mavlink_msg_local_position_ned.h"
+#include  "../minimal/minimal/mavlink_msg_home_position.h"
+
+
 //#include <mavlink.h>
 
 //#define MAVLINK_PRIMARY_XML_IDX 0

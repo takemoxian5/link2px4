@@ -5,7 +5,7 @@
 //#include "stm32f0xx.h"
 #include <stdio.h>
 
-#include "../minimal/minimal/mavlink.h"
+#include "mavlink.h"
 
 #define UART_TX_BUFFER_SIZE        255
 #define UART_RX_BUFFER_SIZE        255
@@ -21,6 +21,9 @@ extern char  test_cntxx[20];
 #define  Auto_PRINTLOG(x)  {if(test_cntxx[x]!=0xa5){printf("====================%d=finished!\r\n",x);\
 	test_cntxx[x]=0;}}
 #endif
+
+
+void remote_update(void);
 
 #endif /* __USART_H */
 
